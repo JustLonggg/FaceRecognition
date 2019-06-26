@@ -1,0 +1,304 @@
+﻿*******查看文件内容
+cat somefile
+more somefile  可翻页查看
+less somefile 可翻页 可逐行 可搜索关键字（/keyword）
+
+tail -10 install.log  查看文件尾部10行
+tail -f install.log  追踪查看最新的数据（追踪文件夹唯一的inode号）
+tail -F install.log  同上（追踪文件名）
+
+head -10 install.log  查看文件头部的10行
+
+
+复制文件
+cp a.txt b.txt
+
+移动文件
+mv a.txt b/c.txt (可以修改文件名）
+
+
+*****后台服务管理
+servic network status  查看指定服务的状态
+service network stop/start/restart
+service --status-all 查看系统中所有的后台服务
+
+chkconfig  查看所有服务器自启配置
+chkconfig iptables off  关掉指定服务的自动启动
+chkconfig iptables on  开启指定服务的自动启动
+
+********软件安装
+sftp工具：alt+p调出，用put命令上传
+sftp>cd Linux存放路径
+sftp> put 本地文件路径
+下载
+sftp> lcd 指定路径
+sftp> get Linux存放路径
+
+******压缩解压缩
+压缩  gzip  文件名
+解压gz文件   gzip -d 文件名
+
+******打包解包
+打包 tar -cvf xxx.tar 文件
+解包 tar -xvf xxx.tar
+
+一次性完成打包&压缩
+tar -zcvf my.tar.gz /somefile
+解压&解包 tar -zxvf my.tar.gz (-C /path加上目标路径）
+
+*****安装JDK的过程
+1.解压安装包
+2、修改环境变量 vi /etc/profile
+ 在文件最后添加 export JAVA_HOME=/root/appa/....
+                          export PATH=$PATH:$JAVA_HOME/bin
+3、重新加载环境变量  source /etc/profile
+
+export 定义全局变量
+source 调用其他子进程的全局变量
+
+
+a | b :将a的结果作为输入传给b
+
+
+A=`...`反引号，将命令的返回值赋给变量 等价于A=$(...)
+
+
+cut -d ' ' f1  以空格分割字符串并取第一个
+
+
+
+
+
+
+
+***********Zookeeper
+是一个分布式协调服务，为用户的分布式应用程序提供协调服务
+a、为别的分布式程序服务
+b、本身就是一个分布式程序（半数以上存活就能运作）
+c、服务包括：主从协调、服务器节点动态上下线、统一配置管理、分布式共享锁、统一名称服务。。。
+d、在底层其实只提供了两个功能：管理（存储，读取）用户程序提交的数据（状态数据）；并为用户程序提供数据节点监听服务
+
+数据更新有稍许延迟
+
+远程启动：ssh mini2 "source /etc/profile;/root/apps/zookeeper-3.4.13/bin/zkServer.sh start"
+
+命令行操作：
+ls / : 查看文件目录
+create /zk mydata： 创建新的znode节点'zk'
+get /zk : 查看文件内容
+set /zk yourdata : 设置文件内容
+delete /zk : 删除znode节点
+rmr /zk : 删除包含子节点的znode节点
+
+
+*********Hadoop
+功能：利用服务器集群，根据用户的自定义业务逻辑，对海量数据进行分布式处理
+核心组件
+1、HDFS（分布式文件系统）
+2、YARN（运算资源调度系统）
+3、MAPREDUCE（分布式运算编程框架）
+
+GFS--->HDFS
+MAPREDUCE---->MAPREDUCE
+BIG TABLE----->HBASE
+
+HDFS：
+start-dfs.sh  开启HDFS集群
+start-yarn.sh 开启yarn
+hadoop-daemon.sh start namenode/datanode  启动单个服务器
+
+hadoop fs -ls /  查看hadoop数据根目录
+hadoop fs -put xxx /   将xxx文件放到hadoop数据根目录下
+hadoop fs -cat /xxx    查看xxx文件内容
+hadoop fs -get /xxx   下载xxx
+hadoop fs -mkdir -p /xxx/xxx/xxx  新建文件夹
+
+调用jar包进行Wordcount
+cd apps/hadoop-2.6.4/share/hadoop/mapreduce
+hadoop jar hadoop-mapreduce-examples-2.6.4.jar wordcount /wordcount/input/ /wordcount/output
+
+遭遇故障重新格式化hadoop
+删除所有datanode的hdpdata
+然后hadoop namenode -formate
+
+
+************hive
+
+hive是用来做离线数据分析的，而不是做联机事务处理的，所以没有update
+
+hive建立外部表
+create external table t_sz_ext(id int,name string)
+row format delimited fields terminated by '\t'
+stored as textfile
+location '/ext_tables';
+
+向外部表插入数据：
+load data local inpath '/home/hadoop/scripts/sz2.dat' (overwrite) into table t_sz_ext;
+（因为外部表没有路径，不可以直接把数据放到路径中）
+
+hive建立分区表
+create table t_sz_part(id int,name string)
+partitioned by (country string)
+row format delimited fields terminated by ',';
+
+load data local inpath '/home/hadoop/scripts/sz.dat' into table t_sz_part partition(country='XXX');
+
+alter table t_sz_par add/drop partition (country='XXX');
+
+show partition t_sz_part;
+
+hive建立分桶表
+create table t_bucket(id string,name string)
+    > clustered by (id)
+    > sorted by (id)
+    > into 4 buckets
+    > row format delimited fields terminated by ',';
+
+并不会自动帮你分桶，适用于从别的表导入数据，依靠MapReduce进行分桶
+
+首先打开模式开关 指定开启分桶
+set hive.enforce.bucketing = true;
+#设置reduce数量，要与分桶数量一致
+set mapreduce.job.reduces=4;
+
+insert into table t_bucket select * from t_p distribute by (id) sort by (id);
+等价于 insert into table t_bucket select * from t_p cluster by (id);
+（当分区字段和排序字段是同一个时）
+
+
+分桶表最大的意义在于提高join的效率（两个分桶表的桶数相同）
+
+order by 会对输入做全局排序，因此只有一个reducer（强制设为1）
+sort by 不是全局排序，其在数据进入reducer前完成排序 只保证每个reducer的输出有序
+
+
+********保存查询结果
+1、insert into XXX（已存在）select from  ；或者 create table XXX（未存在） as select from 
+
+2、将查询结果保存到指定的文件目录（可以是本地，也可以是hdfs）
+insert overwrite(只能是overwrite） (local) directory ‘路径’select from
+
+
+
+*******join操作
+inner join
+full outer join
+left semi join （相当于exist in子查询）只返回左表的内容
+（也相当于inner join的高效实现）
+
+
+**********transform 利用python自定义函数
+create table XXX（）
+row format delimited
+fields terminated by '';
+
+add file xxx.py;
+
+insert overwrite table XXX
+select
+transform(原表字段)
+using 'python xxx.py'
+as(新表字段)
+from 原表名；
+
+
+
+*********hive面试题 按月累加
+select A.username,A.month,max(A.salary) as salary,sum(B.salary) as accumulate
+from
+(select username,month,sum(salary) as salary from t_access_times group by username,month) A
+inner join
+(select username,month,sum(salary) as salary from t_access_times group by username,month) B
+on
+A.username = B.username
+where B.month <= A.month
+group by A.username,A.month
+order by A.username,A.month;
+
+
+
+*******远程登录mysql
+mysql -h XXX(主机名) -uroot -p
+
+
+********sqoop
+把mysql中的表导入hdfs
+bin/sqoop import \
+> --connect jdbc:mysql://mini4:3306/test  \
+> --username root  \
+> --password wusheng2009  \
+(> --where "expression"  \)
+> --target-dir /(new or exist directory in hdfs)
+> --table sqoop_input  \
+> --m 1
+
+
+把mysql中的表导入hive
+bin/sqoop import \
+--connect jdbc:mysql://mini4:3306/test  \
+--username root  \
+--password wusheng2009  \
+--table sqoop_input  \
+--hive-import  \
+--m 1
+
+按照需求把mysql中的表导入hdfs
+bin/sqoop import \
+--connect jdbc:mysql://mini4:3306/test  \
+--username root  \
+--password wusheng2009  \
+--target-dir /(new or exist directory in hdfs)
+--query 'select * from ... where expression and $CONDITIONS'  \
+--split-by id  \
+--fields-terminated-by '\t'  \   #导出后指定分隔符
+--m 2
+
+增量导入
+bin/sqoop import \
+--connect jdbc:mysql://mini4:3306/test  \
+--username root  \
+--password wusheng2009  \
+--target-dir /(new or exist directory in hdfs)
+--table sqoop_input --m 1  \
+--incremental append \
+--check-column id  \
+--last-value xxxx   #从last value开始导入
+
+
+*****导出到mysql
+需要手动在mysql建立新表
+然后导出
+bin/sqoop export \
+--connect jdbc:mysql://mini4:3306/test  \
+--username root  \
+--password wusheng2009  \
+--table sqoop_exput  \
+--export-dir /....(hdfs中文件路径)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

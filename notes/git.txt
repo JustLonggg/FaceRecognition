@@ -1,0 +1,8 @@
+*******从本地上传项目到GitHub
+
+1.GitHub上新建仓库
+2.git clone ...
+3.git add . (注意 “.”)
+4.git commit -m "..."
+5.git push -u origin master
+
