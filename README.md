@@ -1,2 +1,2 @@
 # FaceRecognition
-Bosch FaceRecognition
+The Project of Bosch FaceRecognition
