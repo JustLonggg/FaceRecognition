@@ -1,4 +1,4 @@
-*********Django简介
+﻿*********Django简介
 编程模式：MTV（各个模块之间松耦合）
 
 Model：处理应用程序数据逻辑，在数据库中存取数据
@@ -50,6 +50,8 @@ class 表名（models.Model）:
 
 一对多时，外键写在'多'的那张表，并关联'一'的主键
     外键名 = models.ForeignKey(''一’表类', [新版本：on_delete=models.CASCADE(DO_NOTHING])
+    def __str__(self): 
+        return self.....
 
 说明：不需要定义主键，在生成时自动添加，并且值为自动增加
 
@@ -123,12 +125,44 @@ python manage.py createsuperuser
 language：‘zh-Hans'
 tiemzone:'Asia/Shanghai'
       
+管理数据表,添加数据表到后台
+修改admin.py文件 注册models中的表
+from .models import AAA,BBB
+admin.site.register(AAA)
+........
+
+自定义管理页面
+a.属性说明
+from .models import AAA,BBB
+class AAAAdmin(admin.ModelAdmin):
+    列表页属性
+    list_display = ['...',....]    （显示字段）
+    list_filter = ['....']   （过滤字段）
+    search_field = ['...']    （搜索字段）
+    list_per_page = n   （分页）
+
+    添加、修改页属性
+    fields = [    ]    (修改字段顺序)
+    fieldsets = [('...',{'fields':[...]}),  ('...',{ }) ,....]  （属性分组，不能喝fields同时使用 ）  
+
+class BBBAdmin(admin.ModelAdmin):
+    ....
+    ....
+
+admin.site.register(AAA,AAAAdmin)
+admin.site.register(BBB,BBBAdmin)
+
+b.关联对象
+c.显示设置
+基本流程09
 
 
 
 
 
 
+
+ 
 
 
 
