@@ -1,107 +1,128 @@
-*********Django���
-���ģʽ��MTV������ģ��֮������ϣ�
+*********Django简介
+编程模式：MTV（各个模块之间松耦合）
 
-Model������Ӧ�ó��������߼��������ݿ��д�ȡ����
-Template��ģ�壩:��ҳ��չʾ���û�
-View��ҵ���߼�����ʱ����Model��Template
+Model：处理应用程序数据逻辑，在数据库中存取数据
+Template（模板）:把页面展示给用户
+View：业务逻辑，适时调用Model和Template
 
-���̣�
-1.�������⻷����mkvirtualenv ������
-������ workon ���������Ѵ��ڣ���
+流程：
+1.创建虚拟环境：mkvirtualenv 环境名
+（或者 workon 环境名（已存在））
 
-2.��ָ��Ŀ¼����Django��Ŀ
-django-admin startproject ��Ŀ��
+2.在指定目录创建Django项目
+django-admin startproject 项目名
 
-3.�鿴Ŀ¼�ṹ��tree . /f
+3.查看目录结构：tree . /f
 
-4.����MySQL���ݿ�
-��װPyMySQL
-��__init__��д�����д��룺
+4.配置MySQL数据库
+安装PyMySQL
+在__init__中写入两行代码：
 import pymysql
 pymysql.install_as_MySQLdb()
 
-��mysql mysql -u root -p
-�������ݿ�
-settings.py ���޸�DATABASES
+打开mysql mysql -u root -p
+建立数据库
+settings.py 中修改DATABASES
 .mysql,
-'NAME':'���ݿ���',
+'NAME':'数据库名',
 'USER':'root',
 'PASSWORD':' ... ',
 'HOST':'localhost',
 'PORT':'3306',
 
-5.����Ӧ��
-������Ŀ 
-python manage.py startapp app��
+5.创建应用
+进入项目 
+python manage.py startapp app名
  
-6.����Ӧ��
-���뵽settings.py�е�INSTALLEDE_APPS
+6.激活应用
+加入到settings.py中的INSTALLEDE_APPS
 
-7.����ģ��
-��һ�����ݱ����Ͷ�Ӧһ��ģ���ࡣ��models.py�ж���ģ����
-����from django.db import models��Ϊģ����Ҫ�̳�models.Model��
-һ��ģ��������ԾͶ�Ӧ���ݱ����ֶ�
-class ������models.Model��:
-    �ֶΣ����ԣ� = models.�ֶ����ͣ���
+7.定义模型
+有一个数据表，就对应一个模型类。在models.py中定义模型类
+引入from django.db import models因为模型类要继承models.Model类
+一个模型类的属性就对应数据表的字段
+class 表名（models.Model）:
+    字段（属性） = models.字段类型（）
     XXX = models.CharField(max_length=20)
     XXX = models.BooleanField(default=False)
-    ������
-���涨���������Զ���������
+    。。。
+不规定主键，会自动生成主键
 
-һ�Զ�ʱ�����д��'��'�����ű���������'һ'������
-    ����� = models.ForeignKey(''һ������', [�°汾��on_delete=models.CASCADE(DO_NOTHING])
+一对多时，外键写在'多'的那张表，并关联'一'的主键
+    外键名 = models.ForeignKey(''一’表类', [新版本：on_delete=models.CASCADE(DO_NOTHING])
 
-˵��������Ҫ����������������ʱ�Զ����ӣ�����ֵΪ�Զ�����
+说明：不需要定义主键，在生成时自动添加，并且值为自动增加
 
-8.�����ݿ����������ݱ�
-����Ǩ���ļ�
-����Ŀ��  python manage.py makemigrations
-ִ��Ǩ��
+8.在数据库中生成数据表
+生成迁移文件
+在项目中  python manage.py makemigrations
+执行迁移
 python manage.py migrate
 
-ͨ�������ɵĶ������������ݣ�һ�������൱��һ�����ݣ�
+通过类生成的对象来操作数据（一个对象相当于一条数据）
 
-9.���ݲ��� 
-����python shell  ִ��<python manage.py shell>
-�����
-from Ӧ����.models import ����
+9.数据操作 
+进入python shell  执行<python manage.py shell>
+引入包
+from 应用名.models import 类名
 from django.utils import timezone
 from datetime import *
 
-��ѯ�������ݣ���.objects.all()
-��Ҫ���������Ӻ�����
+查询所有数据：类.objects.all()
+需要在类中添加函数：
 def __str__(self):
     return '%..%..%.......' % (self.XXX,self.XXX,.........)
-�����������Ҫ����shell
-���û�иı�������ݲ���Ҫ����Ǩ���ļ�
+如果后添加需要重启shell
+如果没有改变表的内容不需要重新迁移文件
 
 
-��������(�����Ǵ���һ��ģ����Ķ���ʵ��)��
-���� = ��() ����ʱ��û�����ݣ�������__init__����Ϊ�Ѿ���ռ�ã�
-����.���� = ....
+添加数据(本质是创建一个模型类的对象实例)：
+对象 = 类() （这时还没有数据，不能用__init__，因为已经被占用）
+对象.属性 = ....
 .............
 .............
-����.save()  ���浽���ݱ���
+（对象.外键 = ‘一’表对象）
+对象.save()  保存到数据表中
+
+或者直接添加到关联对象中：
+‘多’对象 = ‘一’对象.‘多’表类名_set.create(属性=...,.....)
+不用save
 
 
-�鿴ĳ������
-g = ��.objects.get(pk=..)
+查看某个对象
+g = 类.objects.get(pk=..)
+
+查看‘一’表对象对应的‘多’表对象(关联对象的集合)：
+‘一’表对象.‘多’表类名_set.all()    (自动生成的属性)
+
+修改
+对象.属性 = 新值
+对象.save()
 
 
-�޸�
-����.���� = ��ֵ
-����.save()
-
-
-ɾ��
-����.delete()    ����ɾ�������ݿ��е����ݱ�ɾ����
+删除
+对象.delete()    物理删除，数据库中的数据被删除了
 
 
 
-10.ͬ�����ݿ��������ݵ�models
-ִ��<python manage.py inspectdb  ���� > app��/models.py
+10.同步数据库已有数据到models
+执行<python manage.py inspectdb  表名 > app名/models.py
 
 
+11.启动服务器 
+执行 <python manage.py runserver>
+
+
+12.admin站点管理（可视化界面管理数据）
+配置admin应用 settings.py 的INSTALLED_APPS 中添加 'django.contrib.admin' （已配置）
+创建管理员用户
+进入项目
+python manage.py createsuperuser
+
+汉化：修改settings.py
+language：‘zh-Hans'
+tiemzone:'Asia/Shanghai'
+      
 
 
 
