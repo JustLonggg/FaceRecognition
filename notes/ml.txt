@@ -424,7 +424,9 @@ https://blog.csdn.net/woaidapaopao/article/details/77806273
 https://www.cnblogs.com/guoyaohua/p/8724433.html   ——Batch Normalization
 
 
-
+**CNN与RNN都使用了权值共享来节省计算资源
+CNN中卷积核可以作用于图片中的所有位置，图片的不同位置共享卷积核
+RNN中与句子中的每个输入词相乘的权重wi,与前一个节点传到当前节点的输出相乘的权重wj,与两项之和相乘得到当前节点最终输出的权重wk都是共享的，句子中的每个词共享这三个权重
 
 
 
